@@ -11,13 +11,13 @@ public class LavaVision extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
-        getLogger().info("LavaInvis plugin enabled");
+        getLogger().info("LavaVision enabled");
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        getLogger().info("LavaInvis plugin disabled");
+        getLogger().info("LavaVision disabled");
     }
 
     @Override
@@ -26,7 +26,7 @@ public class LavaVision extends JavaPlugin {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
                 if (player.hasPermission("lavavision.use")) {
-                    player.sendMessage("Lava Vision enabled");
+                    player.sendMessage("LavaVision enabled");
                     for (int x = -30; x <= 30; x++) {
                         for (int y = -30; y <= 30; y++) {
                             for (int z = -30; z <= 30; z++) {
