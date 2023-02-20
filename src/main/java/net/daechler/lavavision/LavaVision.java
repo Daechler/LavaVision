@@ -5,6 +5,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 public class LavaVision extends JavaPlugin {
 
@@ -27,15 +28,20 @@ public class LavaVision extends JavaPlugin {
                 Player player = (Player) sender;
                 if (player.hasPermission("lavavision.use")) {
                     player.sendMessage("LavaVision enabled");
-                    for (int x = -30; x <= 30; x++) {
-                        for (int y = -30; y <= 30; y++) {
-                            for (int z = -30; z <= 30; z++) {
-                                if (player.getLocation().getBlock().getRelative(x, y, z).getType() == Material.LAVA) {
-                                    player.sendBlockChange(player.getLocation().getBlock().getRelative(x, y, z).getLocation(), Material.AIR.createBlockData());
+                    BukkitScheduler scheduler = getServer().getScheduler();
+                    scheduler.runTaskAsynchronously(this, new Runnable() {
+                        public void run() {
+                            for (int x = -30; x <= 30; x++) {
+                                for (int y = -30; y <= 30; y++) {
+                                    for (int z = -30; z <= 30; z++) {
+                                        if (player.getLocation().getBlock().getRelative(x, y, z).getType() == Material.LAVA) {
+                                            player.sendBlockChange(player.getLocation().getBlock().getRelative(x, y, z).getLocation(), Material.AIR.createBlockData());
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
+                    });
                     return true;
                 } else {
                     player.sendMessage("You don't have permission to use this command.");
