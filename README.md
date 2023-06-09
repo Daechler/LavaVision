@@ -1,2 +1,2 @@
 # LavaVision
-See through lava!
+Make lava transparent.
