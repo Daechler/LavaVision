@@ -2,10 +2,11 @@ name: LavaVision
 version: '${project.version}'
 main: net.daechler.lavavision.LavaVision
 api-version: 1.19
-authors: [ Daechler ]
-description: Lets you see through the lava.
+authors: [Daechler]
+description: Make lava transparent.
 commands:
   lavavision:
-    description: Permission to use /lavavision
+    description: Make lava transparent.
+    aliases: ll
     usage: /lavavision
     permission: lavavision.use

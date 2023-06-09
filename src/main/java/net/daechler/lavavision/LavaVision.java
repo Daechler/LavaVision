@@ -1,57 +1,92 @@
 package net.daechler.lavavision;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scheduler.BukkitRunnable;
 
-public class LavaVision extends JavaPlugin {
+import java.util.HashSet;
+import java.util.UUID;
+
+public class LavaVision extends JavaPlugin implements Listener {
+
+    private final HashSet<UUID> playersUsingLavaVision = new HashSet<>();
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
-        getLogger().info("LavaVision enabled");
+        Bukkit.getServer().getConsoleSender().sendMessage("§aLavaVision has been enabled!");
+        startVisionUpdateTask();
+        // Register the event listeners
+        this.getServer().getPluginManager().registerEvents(this, this);
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
-        getLogger().info("LavaVision disabled");
+        Bukkit.getServer().getConsoleSender().sendMessage("§cLavaVision has been disabled!");
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            return false;
+        }
+
         if (command.getName().equalsIgnoreCase("lavavision")) {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                if (player.hasPermission("lavavision.use")) {
-                    player.sendMessage("LavaVision enabled");
-                    BukkitScheduler scheduler = getServer().getScheduler();
-                    scheduler.runTaskAsynchronously(this, new Runnable() {
-                        public void run() {
-                            for (int x = -30; x <= 30; x++) {
-                                for (int y = -30; y <= 30; y++) {
-                                    for (int z = -30; z <= 30; z++) {
-                                        if (player.getLocation().getBlock().getRelative(x, y, z).getType() == Material.LAVA) {
-                                            player.sendBlockChange(player.getLocation().getBlock().getRelative(x, y, z).getLocation(), Material.AIR.createBlockData());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    return true;
-                } else {
-                    player.sendMessage("You don't have permission to use this command.");
-                    return true;
-                }
+            UUID playerUuid = ((Player) sender).getUniqueId();
+            if (playersUsingLavaVision.contains(playerUuid)) {
+                playersUsingLavaVision.remove(playerUuid);
             } else {
-                sender.sendMessage("Only players can use this command.");
-                return true;
+                playersUsingLavaVision.add(playerUuid);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // When a player quits, remove them from the playersUsingLavaVision set
+        playersUsingLavaVision.remove(event.getPlayer().getUniqueId());
+    }
+
+    private void startVisionUpdateTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    updatePlayerVision(player);
+                }
+            }
+        }.runTaskTimer(this, 0, 1);
+    }
+
+    private void updatePlayerVision(Player player) {
+        UUID playerUuid = player.getUniqueId();
+        boolean playerHasLavaVision = playersUsingLavaVision.contains(playerUuid);
+
+        Location location = player.getLocation();
+        int radius = 8; // radius of 8 gives us a 16x16 area
+
+        for (int x = location.getBlockX() - radius; x <= location.getBlockX() + radius; x++) {
+            for (int y = location.getBlockY() - radius; y <= location.getBlockY() + radius; y++) {
+                for (int z = location.getBlockZ() - radius; z <= location.getBlockZ() + radius; z++) {
+                    Location blockLocation = new Location(location.getWorld(), x, y, z);
+                    Material originalMaterial = blockLocation.getBlock().getType();
+
+                    if (originalMaterial == Material.LAVA) {
+                        Material newMaterial = playerHasLavaVision ? Material.AIR : Material.LAVA;
+                        player.sendBlockChange(blockLocation, newMaterial.createBlockData());
+                    }
+                }
             }
         }
-        return false;
     }
 }
